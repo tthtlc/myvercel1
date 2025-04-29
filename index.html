@@ -1,0 +1,120 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vue.js Geometric Shapes</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+  <div id="app" class="flex items-center justify-center min-h-screen bg-gray-100">
+    <div class="w-full max-w-3xl p-4">
+      <div class="relative w-full" :style="{ paddingTop: aspectRatio }">
+        <canvas ref="canvas" class="absolute inset-0 w-full h-full border-2 border-gray-800 bg-white"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const { createApp } = Vue;
+
+    createApp({
+      data() {
+        return {
+          aspectRatio: '75%', // 4:3 aspect ratio for the canvas
+        };
+      },
+      mounted() {
+        this.initCanvas();
+        this.drawShapes();
+        window.addEventListener('resize', this.handleResize);
+      },
+      beforeUnmount() {
+        window.removeEventListener('resize', this.handleResize);
+      },
+      methods: {
+        initCanvas() {
+          const canvas = this.$refs.canvas;
+          const ctx = canvas.getContext('2d');
+          const dpr = window.devicePixelRatio || 1;
+          const rect = canvas.getBoundingClientRect();
+
+          canvas.width = rect.width * dpr;
+          canvas.height = rect.height * dpr;
+          ctx.scale(dpr, dpr);
+
+          // Adjust canvas size to maintain aspect ratio
+          const parent = canvas.parentElement;
+          const parentWidth = parent.clientWidth;
+          const parentHeight = parent.clientHeight;
+          const targetAspect = 4 / 3;
+          let canvasWidth, canvasHeight;
+
+          if (parentWidth / parentHeight > targetAspect) {
+            canvasHeight = parentHeight;
+            canvasWidth = canvasHeight * targetAspect;
+          } else {
+            canvasWidth = parentWidth;
+            canvasHeight = canvasWidth / targetAspect;
+          }
+
+          canvas.style.width = `${canvasWidth}px`;
+          canvas.style.height = `${canvasHeight}px`;
+          this.ctx = ctx;
+          this.canvasWidth = canvasWidth;
+          this.canvasHeight = canvasHeight;
+        },
+        drawShapes() {
+          const ctx = this.ctx;
+          const width = this.canvasWidth;
+          const height = this.canvasHeight;
+
+          ctx.clearRect(0, 0, width, height);
+
+          // Draw Circle
+          ctx.beginPath();
+          ctx.arc(width * 0.25, height * 0.3, width * 0.1, 0, 2 * Math.PI);
+          ctx.strokeStyle = 'blue';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          // Draw Rectangle
+          ctx.beginPath();
+          ctx.rect(width * 0.6, height * 0.2, width * 0.2, height * 0.2);
+          ctx.strokeStyle = 'red';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          // Draw Hypotrochoid
+          const R = width * 0.15; // Outer circle radius
+          const r = width * 0.05; // Inner circle radius
+          const d = width * 0.08; // Distance from inner circle center to drawing point
+          const cx = width * 0.5; // Center x
+          const cy = height * 0.7; // Center y
+
+          ctx.beginPath();
+          ctx.strokeStyle = 'green';
+          ctx.lineWidth = 2;
+
+          for (let theta = 0; theta <= Math.PI * 6; theta += 0.01) {
+            const x = (R - r) * Math.cos(theta) + d * Math.cos(((R - r) / r) * theta);
+            const y = (R - r) * Math.sin(theta) - d * Math.sin(((R - r) / r) * theta);
+            if (theta === 0) {
+              ctx.moveTo(cx + x, cy + y);
+            } else {
+              ctx.lineTo(cx + x, cy + y);
+            }
+          }
+          ctx.stroke();
+        },
+        handleResize() {
+          this.initCanvas();
+          this.drawShapes();
+        },
+      },
+    }).mount('#app');
+  </script>
+</body>
+</html>
